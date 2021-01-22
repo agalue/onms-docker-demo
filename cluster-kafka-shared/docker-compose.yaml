@@ -1,0 +1,367 @@
+version: '3.7'
+
+services:
+
+  zookeeper1:
+    image: zookeeper:3.5
+    container_name: zookeeper1
+    hostname: zookeeper1
+    environment:
+    - TZ=America/New_York
+    - ZOO_MY_ID=1
+    - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+    - ZOO_STANDALONE_ENABLED=false
+    - ZOO_4LW_COMMANDS_WHITELIST=*
+    healthcheck:
+      test: echo stat | nc zookeeper1 2181
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  zookeeper2:
+    image: zookeeper:3.5
+    container_name: zookeeper2
+    hostname: zookeeper2
+    environment:
+    - TZ=America/New_York
+    - ZOO_MY_ID=2
+    - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+    - ZOO_STANDALONE_ENABLED=false
+    - ZOO_4LW_COMMANDS_WHITELIST=*
+    healthcheck:
+      test: echo stat | nc zookeeper2 2181
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  zookeeper3:
+    image: zookeeper:3.5
+    container_name: zookeeper3
+    hostname: zookeeper3
+    environment:
+    - TZ=America/New_York
+    - ZOO_MY_ID=3
+    - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+    - ZOO_STANDALONE_ENABLED=false
+    - ZOO_4LW_COMMANDS_WHITELIST=*
+    healthcheck:
+      test: echo stat | nc zookeeper3 2181
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  kafka1:
+    image: wurstmeister/kafka:2.13-2.7.0
+    container_name: kafka1
+    hostname: kafka1
+    depends_on:
+    - zookeeper1
+    - zookeeper2
+    - zookeeper3
+    ports:
+    - 9192:9192
+    environment:
+    - TZ=America/New_York
+    - KAFKA_BROKER_ID=1
+    # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9192
+    - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9192
+    - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9192
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181/kafka
+    - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_COMPRESSION_TYPE=producer # for Kafka Producer
+    - KAFKA_NUM_PARTITIONS=9
+    - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+    - KAFKA_DEFAULT_REPLICATION_FACTOR=2
+    - KAFKA_MIN_INSYNC_REPLICAS=1
+    - KAFKA_AUTO_LEADER_REBALANCE_ENABLE=true
+    - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    - KAFKA_DELETE_TOPIC_ENABLE=false
+    - KAFKA_CONTROLLED_SHUTDOWN_ENABLE=true
+    - JMX_PORT=9999
+    - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=9999
+    healthcheck:
+      test: nc -z localhost 9092
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  kafka2:
+    image: wurstmeister/kafka:2.13-2.7.0
+    container_name: kafka2
+    hostname: kafka2
+    depends_on:
+    - zookeeper1
+    - zookeeper2
+    - zookeeper3
+    ports:
+    - 9292:9292
+    environment:
+    - TZ=America/New_York
+    - KAFKA_BROKER_ID=2
+    # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9292
+    - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9292
+    - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9292
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181/kafka
+    - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_COMPRESSION_TYPE=producer # for Kafka Producer
+    - KAFKA_NUM_PARTITIONS=9
+    - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+    - KAFKA_DEFAULT_REPLICATION_FACTOR=2
+    - KAFKA_MIN_INSYNC_REPLICAS=1
+    - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=9999
+    - KAFKA_AUTO_LEADER_REBALANCE_ENABLE=true
+    - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    - KAFKA_DELETE_TOPIC_ENABLE=false
+    - KAFKA_CONTROLLED_SHUTDOWN_ENABLE=true
+    - JMX_PORT=9999
+    healthcheck:
+      test: nc -z localhost 9092
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  kafka3:
+    image: wurstmeister/kafka:2.13-2.7.0
+    container_name: kafka3
+    hostname: kafka3
+    depends_on:
+    - zookeeper1
+    - zookeeper2
+    - zookeeper3
+    ports:
+    - 9392:9392
+    environment:
+    - TZ=America/New_York
+    - KAFKA_BROKER_ID=3
+    # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9392
+    - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9392
+    - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9392
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181/kafka
+    - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_COMPRESSION_TYPE=producer # for Kafka Producer
+    - KAFKA_NUM_PARTITIONS=9
+    - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+    - KAFKA_DEFAULT_REPLICATION_FACTOR=2
+    - KAFKA_MIN_INSYNC_REPLICAS=1
+    - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=9999
+    - KAFKA_AUTO_LEADER_REBALANCE_ENABLE=true
+    - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    - KAFKA_DELETE_TOPIC_ENABLE=false
+    - KAFKA_CONTROLLED_SHUTDOWN_ENABLE=true
+    - JMX_PORT=9999
+    healthcheck:
+      test: nc -z localhost 9092
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  manager:
+    image: hlebalbau/kafka-manager:stable
+    container_name: manager
+    hostname: manager
+    depends_on:
+    - zookeeper1
+    - zookeeper2
+    - zookeeper3
+    ports:
+    - 9000:9000 
+    environment:
+    - TZ=America/New_York
+    - ZK_HOSTS=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9000 || exit 1
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  database1: # For opennms1
+    image: postgres:12
+    container_name: database1
+    hostname: database1
+    ports:
+    - 5432:5432
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database1
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  opennms1:
+    image: opennms/horizon:27.0.3
+    container_name: opennms1
+    hostname: opennms1
+    depends_on:
+    - database1
+    - kafka1
+    - kafka2
+    - kafka3
+    command: [ -s ]
+    ports:
+    - 8980:8980
+    - 8101:8101
+    volumes:
+    - ./config/opennms/shared:/opt/opennms-overlay # Common configuration
+    - ./config/opennms/etc1:/opt/opennms-etc-overlay # Instance ID and Kafka Producer config
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database1
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: curl -f -I http://localhost:8980/opennms/login.jsp
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  minion1: # Connects to opennms1
+    image: opennms/minion:27.0.3
+    container_name: minion1
+    hostname: minion1
+    depends_on:
+    - kafka1
+    - kafka2
+    - kafka3
+    - opennms1
+    command: [ -c ]
+    ports:
+    - 8201:8201
+    - 1162:1162/udp
+    - 1514:1514/udp
+    - 8877:8877/udp
+    volumes:
+    - ./config/minion/config1.yaml:/opt/minion/minion-config.yaml
+    - ./config/minion/custom1.properties:/opt/minion-etc-overlay/custom.system.properties # Because it doesn't work via minion-config.yaml
+    environment:
+    - TZ=America/New_York
+    - OPENNMS_HTTP_USER=admin
+    - OPENNMS_HTTP_PASS=admin
+    healthcheck:
+      test: /health.sh
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  database2: # For opennms2
+    image: postgres:12
+    container_name: database2
+    hostname: database2
+    ports:
+    - 5433:5432
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database2
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  opennms2:
+    image: opennms/horizon:27.0.3
+    container_name: opennms2
+    hostname: opennms2
+    depends_on:
+    - database2
+    - kafka1
+    - kafka2
+    - kafka3
+    command: [ -s ]
+    ports:
+    - 8981:8980
+    - 8102:8101
+    volumes:
+    - ./config/opennms/shared:/opt/opennms-overlay # Common configuration
+    - ./config/opennms/etc2:/opt/opennms-etc-overlay # Instance ID and Kafka Producer config
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database2
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: curl -f -I http://localhost:8980/opennms/login.jsp
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  minion2: # Connects to opennms2
+    image: opennms/minion:27.0.3
+    container_name: minion2
+    hostname: minion2
+    depends_on:
+    - kafka1
+    - kafka2
+    - kafka3
+    - opennms2
+    command: [ -c ]
+    ports:
+    - 8202:8201
+    - 1163:1162/udp
+    - 1515:1514/udp
+    - 8878:8877/udp
+    volumes:
+    - ./config/minion/config2.yaml:/opt/minion/minion-config.yaml
+    - ./config/minion/custom2.properties:/opt/minion-etc-overlay/custom.system.properties # Because it doesn't work via minion-config.yaml
+    environment:
+    - TZ=America/New_York
+    - OPENNMS_HTTP_USER=admin
+    - OPENNMS_HTTP_PASS=admin
+    healthcheck:
+      test: /health.sh
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  helm:
+    container_name: helm
+    hostname: helm
+    image: opennms/helm:6.0.0
+    depends_on:
+    - opennms1
+    - opennms2
+    ports:
+    - 3000:3000
+    volumes:
+    - ./config/grafana/provisioning/:/etc/grafana/provisioning/
+    environment:
+    - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+    - GF_RENDERING_CALLBACK_URL=http://helm:3000/
+    - GF_LOG_FILTERS=rendering:debug
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://helm:3000/login
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  renderer:
+    container_name: renderer
+    hostname: renderer
+    image: grafana/grafana-image-renderer:latest
+    ports:
+    - 8081:8081
+    environment:
+    - ENABLE_METRICS=true
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://renderer:8081
+      interval: 1m
+      timeout: 5s
+      retries: 3

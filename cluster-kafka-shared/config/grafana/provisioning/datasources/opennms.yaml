@@ -1,0 +1,64 @@
+apiVersion: 1
+
+datasources:
+
+- name: OpenNMS-Performance-1
+  type: opennms-helm-performance-datasource
+  isDefault: true
+  editable: true
+  access: proxy
+  url: http://opennms1:8980/opennms
+  basicAuth: true
+  basicAuthUser: admin
+  secureJsonData:
+    basicAuthPassword: admin
+
+- name: OpenNMS-Entity-1
+  type: opennms-helm-entity-datasource
+  editable: true
+  access: proxy
+  url: http://opennms1:8980/opennms
+  basicAuth: true
+  basicAuthUser: admin
+  secureJsonData:
+    basicAuthPassword: admin
+
+- name: OpenNMS-Flow-1
+  type: opennms-helm-flow-datasource
+  editable: true
+  access: proxy
+  url: http://opennms1:8980/opennms
+  basicAuth: true
+  basicAuthUser: admin
+  secureJsonData:
+    basicAuthPassword: admin
+
+- name: OpenNMS-Performance-2
+  type: opennms-helm-performance-datasource
+  editable: true
+  access: proxy
+  url: http://opennms2:8980/opennms
+  basicAuth: true
+  basicAuthUser: admin
+  secureJsonData:
+    basicAuthPassword: admin
+
+- name: OpenNMS-Entity-2
+  type: opennms-helm-entity-datasource
+  editable: true
+  access: proxy
+  url: http://opennms2:8980/opennms
+  basicAuth: true
+  basicAuthUser: admin
+  secureJsonData:
+    basicAuthPassword: admin
+
+- name: OpenNMS-Flow-2
+  type: opennms-helm-flow-datasource
+  editable: true
+  access: proxy
+  url: http://opennms2:8980/opennms
+  basicAuth: true
+  basicAuthUser: admin
+  secureJsonData:
+    basicAuthPassword: admin

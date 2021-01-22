@@ -1,0 +1,45 @@
+# Basic Settings
+id: "durham-minion-01"
+location: "Durham"
+http-url: "http://opennms2:8980/opennms"
+
+# Inter Process Communication
+ipc:
+  rpc:
+    kafka:
+      bootstrap.servers: "kafka1:9092"
+      single-topic: "true"
+  sink:
+    kafka:
+      bootstrap.servers: "kafka1:9092"
+
+# Trap/Syslog Reception
+netmgt:
+  syslog:
+    syslog.listen.interface: "0.0.0.0"
+    syslog.listen.port: 1514
+  traps:
+    trapd.listen.interface: "0.0.0.0"
+    trapd.listen.port: 1162
+
+# Flows
+telemetry:
+  flows:
+    listeners:
+      Netflow-Listener:
+        class-name: "org.opennms.netmgt.telemetry.listeners.UdpListener"
+        parameters:
+          port: 8877
+        parsers:
+          Netflow-9:
+            class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow9UdpParser"
+            queue:
+              use-routing-key: "true"
+            parameters:
+              dnsLookupsEnabled: "false"
+          Netflow-5:
+            class-name: "org.opennms.netmgt.telemetry.protocols.netflow.parser.Netflow5UdpParser"
+            queue:
+              use-routing-key: "true"
+            parameters:
+              dnsLookupsEnabled: "false"
