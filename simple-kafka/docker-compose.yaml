@@ -1,0 +1,175 @@
+version: '3.7'
+
+services:
+
+  zookeeper:
+    image: zookeeper:3.5
+    container_name: zookeeper
+    hostname: zookeeper
+    ports:
+    - 2181:2181
+    environment:
+    - TZ=America/New_York
+    - ZOO_MY_ID=1
+    - ZOO_SERVERS=server.1=zookeeper:2888:3888;2181
+    - ZOO_STANDALONE_ENABLED=true
+    - ZOO_4LW_COMMANDS_WHITELIST=*
+    healthcheck:
+      test: echo stat | nc zookeeper 2181
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  kafka:
+    image: wurstmeister/kafka:2.13-2.7.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+    - 9094:9094
+    depends_on:
+    - zookeeper
+    environment:
+    - TZ=America/New_York
+    - KAFKA_BROKER_ID=1
+    # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9094
+    - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9094
+    - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9094
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181/kafka
+    - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
+    - KAFKA_COMPRESSION_TYPE=producer # for Kafka Producer
+    - KAFKA_NUM_PARTITIONS=1
+    - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 # Because this is a single instance.
+    - KAFKA_DEFAULT_REPLICATION_FACTOR=1 # Because this is a single instance.
+    - KAFKA_MIN_INSYNC_REPLICAS=1
+    - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    - KAFKA_DELETE_TOPIC_ENABLE=false
+    - KAFKA_CONTROLLED_SHUTDOWN_ENABLE=true
+    - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka -Dcom.sun.management.jmxremote.rmi.port=9999
+    - JMX_PORT=9999
+    healthcheck:
+      test: nc -z localhost 9092
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  manager:
+    image: hlebalbau/kafka-manager:stable
+    container_name: manager
+    hostname: manager
+    depends_on:
+    - zookeeper
+    ports:
+    - 9000:9000 
+    environment:
+    - TZ=America/New_York
+    - ZK_HOSTS=zookeeper:2181
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9000 || exit 1
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  database:
+    image: postgres:12
+    container_name: database
+    hostname: database
+    ports:
+    - 5432:5432
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  opennms:
+    image: opennms/horizon:27.0.3
+    container_name: opennms
+    hostname: opennms
+    depends_on:
+    - database
+    - kafka
+    command: [ -s ]
+    ports:
+    - 8980:8980
+    - 8101:8101
+    volumes:
+    - ./config/opennms:/opt/opennms-etc-overlay
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: curl -f -I http://localhost:8980/opennms/login.jsp
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  minion:
+    image: opennms/minion:27.0.3
+    container_name: minion
+    hostname: minion
+    depends_on:
+    - kafka
+    - opennms
+    command: [ -c ]
+    ports:
+    - 8201:8201
+    - 1162:1162/udp
+    - 1514:1514/udp
+    - 8877:8877/udp
+    volumes:
+    - ./config/minion/config.yaml:/opt/minion/minion-config.yaml
+    environment:
+    - TZ=America/New_York
+    - OPENNMS_HTTP_USER=admin
+    - OPENNMS_HTTP_PASS=admin
+    healthcheck:
+      test: /health.sh
+      interval: 1m
+      timeout: 5s
+      retries: 3
+ 
+  helm:
+    container_name: helm
+    hostname: helm
+    image: opennms/helm:6.0.0
+    depends_on:
+    - opennms
+    ports:
+    - 3000:3000
+    volumes:
+    - ./config/grafana/provisioning/:/etc/grafana/provisioning/
+    environment:
+    - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+    - GF_RENDERING_CALLBACK_URL=http://helm:3000/
+    - GF_LOG_FILTERS=rendering:debug
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://helm:3000/login
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  renderer:
+    container_name: renderer
+    hostname: renderer
+    image: grafana/grafana-image-renderer:latest
+    ports:
+    - 8081:8081
+    environment:
+    - ENABLE_METRICS=true
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://renderer:8081
+      interval: 1m
+      timeout: 5s
+      retries: 3

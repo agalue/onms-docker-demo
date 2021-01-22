@@ -1,0 +1,42 @@
+Simple Demo
+====
+
+A `docker-compose` lab to start PostgreSQL 12, OpenNMS Horizon 27, Grafana 7, OpenNMS Helm 6.x, Grafana Imager Renderer for reports.
+
+It includes a modified configuration for `Pollerd` and `Collectd` to gather data every 30 seconds.
+
+> No volumes are defined, meaning all data will be lost when stoping the lab.
+
+## Usage
+
+To start the lab:
+
+```shell
+docker-compose up -d
+```
+
+Wait a couple of minutes to make sure everything is running. You could use the following command to verify the status:
+
+```shell
+docker-compose ps
+```
+
+To stop the lab:
+
+```shell
+docker-compose down -v
+```
+
+To have shell access to OpenNMS:
+
+```shell
+docker-compose exec opennms bash
+```
+
+To access the database:
+
+```shell
+docker-compose exec database psql -U opennms opennms
+```
+
+OpenNMS (WebUI and Karaf Shell) and Grafana are available on their respective default ports on your machine IP address or localhost.

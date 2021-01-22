@@ -1,0 +1,80 @@
+version: '3.7'
+
+services:
+
+  database:
+    container_name: database
+    hostname: database
+    image: postgres:12
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  opennms:
+    container_name: opennms
+    hostname: opennms
+    image: opennms/horizon:27.0.3
+    depends_on:
+    - database
+    command: [ -s ]
+    ports:
+    - 8980:8980
+    - 8101:8101
+    - 10514:10514/udp
+    - 1162:1162/udp
+    volumes:
+    - ./config/opennms:/opt/opennms-overlay
+    environment:
+    - TZ=America/New_York
+    - POSTGRES_HOST=database
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    - JAVA_OPTS=-Xms4096m -Xmx4096m -XX:+UseG1GC -XX:+UseStringDeduplication
+    healthcheck:
+      test: curl -f -I http://localhost:8980/opennms/login.jsp
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  helm:
+    container_name: helm
+    hostname: helm
+    image: opennms/helm:6.0.0
+    depends_on:
+    - opennms
+    ports:
+    - 3000:3000
+    volumes:
+    - ./config/grafana/provisioning/:/etc/grafana/provisioning/
+    environment:
+    - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+    - GF_RENDERING_CALLBACK_URL=http://helm:3000/
+    - GF_LOG_FILTERS=rendering:debug
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://helm:3000/login
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  renderer:
+    container_name: renderer
+    hostname: renderer
+    image: grafana/grafana-image-renderer:latest
+    ports:
+    - 8081:8081
+    environment:
+    - ENABLE_METRICS=true
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://renderer:8081
+      interval: 1m
+      timeout: 5s
+      retries: 3

@@ -1,0 +1,7 @@
+<model-import xmlns="http://xmlns.opennms.org/xsd/config/model-import" date-stamp="2020-09-30T15:23:13.716-04:00" foreign-source="Local" last-import="2020-09-30T15:30:19.283-04:00">
+   <node foreign-id="opennms-server" node-label="opennms-server">
+      <interface ip-addr="127.0.0.1" status="1" snmp-primary="N">
+         <monitored-service service-name="OpenNMS-JVM"/>
+      </interface>
+   </node>
+</model-import>

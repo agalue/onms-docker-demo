@@ -1,0 +1,44 @@
+<collectd-configuration xmlns="http://xmlns.opennms.org/xsd/config/collectd" threads="50">
+   <package name="default-collection" remote="false">
+      <filter>IPADDR != '0.0.0.0'</filter>
+      <include-range begin="1.1.1.1" end="254.254.254.254"/>
+      <service name="SNMP" interval="30000" user-defined="false" status="on">
+         <parameter key="collection" value="default"/>
+         <parameter key="thresholding-enabled" value="true"/>
+      </service>
+      <service name="WS-Man" interval="30000" user-defined="false" status="on">
+         <parameter key="collection" value="default"/>
+         <parameter key="thresholding-enabled" value="true"/>
+      </service>
+      <service name="OpenNMS-JVM" interval="30000" user-defined="false" status="on">
+         <parameter key="port" value="18980"/>
+         <parameter key="retry" value="2"/>
+         <parameter key="timeout" value="3000"/>
+         <parameter key="rrd-base-name" value="java"/>
+         <parameter key="collection" value="jsr160"/>
+         <parameter key="thresholding-enabled" value="true"/>
+         <parameter key="ds-name" value="opennms-jvm"/>
+         <parameter key="friendly-name" value="opennms-jvm"/>
+      </service>
+      <service name="PostgreSQL" interval="30000" user-defined="false" status="on">
+         <parameter key="collection" value="PostgreSQL"/>
+         <parameter key="thresholding-enabled" value="true"/>
+         <parameter key="driver" value="org.postgresql.Driver"/>
+         <parameter key="user" value="postgres"/>
+         <parameter key="password" value="postgres"/>
+         <parameter key="url" value="jdbc:postgresql://OPENNMS_JDBC_HOSTNAME:5432/opennms"/>
+      </service>
+      <service name="HTTP" interval="30000" user-defined="false" status="on">
+         <parameter key="collection" value="stats"/>
+         <parameter key="thresholding-enabled" value="false"/>
+      </service>
+   </package>
+   <collector service="SNMP" class-name="org.opennms.netmgt.collectd.SnmpCollector"/>
+   <collector service="WS-Man" class-name="org.opennms.netmgt.collectd.WsManCollector"/>
+   <collector service="OpenNMS-JVM" class-name="org.opennms.netmgt.collectd.Jsr160Collector"/>
+   <collector service="PostgreSQL" class-name="org.opennms.netmgt.collectd.JdbcCollector"/>
+   <collector service="HTTP" class-name="org.opennms.netmgt.collectd.HttpCollector"/>
+<!--
+   <collector service="HTTP" class-name="org.opennms.protocols.xml.collector.XmlCollector"/>
+-->
+</collectd-configuration>
