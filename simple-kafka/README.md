@@ -45,4 +45,4 @@ docker-compose exec database psql -U opennms opennms
 
 OpenNMS (WebUI and Karaf Shell) and Grafana are available on their respective default ports on your machine IP address or localhost.
 
-The Kafka Manager (CMAK) is exposed on port 9000, and for external Minions, Kafka should be reachable on port 9094 (using the machine IP address or localhost).
+The Kafka Manager (CMAK) is exposed on port 9000.
