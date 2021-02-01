@@ -3,11 +3,11 @@ Shared Kafka Cluster Demo with Mulple OpenNMS instances
 
 A `docker-compose` lab to start 2 OpenNMS environments sharing the same Kafka/Zookepeer cluster. Each OpenNMS environment has a PostgreSQL 12, Horizon 27, and Minion 27. Then Grafana 7 with OpenNMS Helm 6.x is available with data sources for both OpenNMS environments.
 
-This uses a cusotm 'Instance ID' to make sure the Kafka Topics used by one OpenNMS/Minion pair won't interfere with the other pair. For more information:
+This uses a custom 'Instance ID' to make sure the Kafka Topics used by one OpenNMS/Minion pair won't interfere with the other pair. For more information:
 
 https://hackmd.io/XGpvmJoYT7iYyourTmU5Bw
 
-The environment 1 has a location called `Apex` (which is also used for the Kafka Topics prefix), whereas the environment 2 has a location called `Durham`.
+The environment 1, uses an Instance ID of `DC1` and has a location called `Apex`; whereas the environment 2, uses an Instance ID of `DC2` and has a location called `Durham`.
 
 It includes a modified configuration for `Pollerd` and `Collectd` to gather data every 30 seconds.
 
