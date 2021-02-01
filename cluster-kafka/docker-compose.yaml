@@ -60,14 +60,18 @@ services:
     - zookeeper3
     ports:
     - 9192:9192
+    volumes:
+    - ./config/kafka/jaas.conf:/opt/kafka/config/kafka_server_jaas.conf
     environment:
     - TZ=America/New_York
     - KAFKA_BROKER_ID=1
     # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9192
     - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9192
     - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9192
-    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:SASL_PLAINTEXT,OUTSIDE:SASL_PLAINTEXT
     - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL=PLAIN
+    - KAFKA_SASL_ENABLED_MECHANISMS=PLAIN
     - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181/kafka
     - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
     - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
@@ -80,8 +84,9 @@ services:
     - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     - KAFKA_DELETE_TOPIC_ENABLE=false
     - KAFKA_CONTROLLED_SHUTDOWN_ENABLE=true
-    - JMX_PORT=9999
+    - KAFKA_OPTS=-Djava.security.auth.login.config=/opt/kafka/config/kafka_server_jaas.conf
     - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=9999
+    - JMX_PORT=9999
     healthcheck:
       test: nc -z localhost 9092
       interval: 30s
@@ -98,14 +103,18 @@ services:
     - zookeeper3
     ports:
     - 9292:9292
+    volumes:
+    - ./config/kafka/jaas.conf:/opt/kafka/config/kafka_server_jaas.conf
     environment:
     - TZ=America/New_York
     - KAFKA_BROKER_ID=2
     # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9292
     - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9292
     - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9292
-    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:SASL_PLAINTEXT,OUTSIDE:SASL_PLAINTEXT
     - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL=PLAIN
+    - KAFKA_SASL_ENABLED_MECHANISMS=PLAIN
     - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181/kafka
     - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
     - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
@@ -114,6 +123,7 @@ services:
     - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
     - KAFKA_DEFAULT_REPLICATION_FACTOR=2
     - KAFKA_MIN_INSYNC_REPLICAS=1
+    - KAFKA_OPTS=-Djava.security.auth.login.config=/opt/kafka/config/kafka_server_jaas.conf
     - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=9999
     - KAFKA_AUTO_LEADER_REBALANCE_ENABLE=true
     - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
@@ -136,14 +146,18 @@ services:
     - zookeeper3
     ports:
     - 9392:9392
+    volumes:
+    - ./config/kafka/jaas.conf:/opt/kafka/config/kafka_server_jaas.conf
     environment:
     - TZ=America/New_York
     - KAFKA_BROKER_ID=3
     # Inside Docker, OpenNMS and Minion will use port 9092; and Outside Docker, port 9392
     - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://docker.for.mac.host.internal:9392
     - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:9392
-    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+    - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:SASL_PLAINTEXT,OUTSIDE:SASL_PLAINTEXT
     - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+    - KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL=PLAIN
+    - KAFKA_SASL_ENABLED_MECHANISMS=PLAIN
     - KAFKA_ZOOKEEPER_CONNECT=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181/kafka
     - KAFKA_MESSAGE_MAX_BYTES=5000000 # for Kafka Producer
     - KAFKA_REPLICA_FETCH_MAX_BYTES=5000000 # for Kafka Producer
@@ -152,6 +166,7 @@ services:
     - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
     - KAFKA_DEFAULT_REPLICATION_FACTOR=2
     - KAFKA_MIN_INSYNC_REPLICAS=1
+    - KAFKA_OPTS=-Djava.security.auth.login.config=/opt/kafka/config/kafka_server_jaas.conf
     - KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=9999
     - KAFKA_AUTO_LEADER_REBALANCE_ENABLE=true
     - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
