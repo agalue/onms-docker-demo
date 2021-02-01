@@ -9,9 +9,15 @@ ipc:
     kafka:
       bootstrap.servers: "kafka:9092"
       single-topic: "true"
+      security.protocol: SASL_PLAINTEXT
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";
   sink:
     kafka:
       bootstrap.servers: "kafka:9092"
+      security.protocol: SASL_PLAINTEXT
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="opennms" password="0p3nNM5";
 
 # Trap/Syslog Reception
 netmgt:
