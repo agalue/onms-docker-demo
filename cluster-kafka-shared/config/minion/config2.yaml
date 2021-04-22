@@ -3,6 +3,11 @@ id: "durham-minion-01"
 location: "Durham"
 http-url: "http://opennms2:8980/opennms"
 
+# System Properties
+system:
+  properties:
+    org.opennms.instance.id: "DC2"
+
 # Inter Process Communication
 ipc:
   rpc:

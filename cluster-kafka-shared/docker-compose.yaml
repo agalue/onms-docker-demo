@@ -217,7 +217,7 @@ services:
       retries: 3
 
   opennms1:
-    image: opennms/horizon:27.0.3
+    image: opennms/horizon:27.1.1
     container_name: opennms1
     hostname: opennms1
     depends_on:
@@ -245,7 +245,7 @@ services:
       retries: 3
 
   minion1: # Connects to opennms1
-    image: opennms/minion:27.0.3
+    image: opennms/minion:27.1.1
     container_name: minion1
     hostname: minion1
     depends_on:
@@ -261,7 +261,6 @@ services:
     - 8877:8877/udp
     volumes:
     - ./config/minion/config1.yaml:/opt/minion/minion-config.yaml
-    - ./config/minion/custom1.properties:/opt/minion-etc-overlay/custom.system.properties # Because it doesn't work via minion-config.yaml
     environment:
     - TZ=America/New_York
     - OPENNMS_HTTP_USER=admin
@@ -291,7 +290,7 @@ services:
       retries: 3
 
   opennms2:
-    image: opennms/horizon:27.0.3
+    image: opennms/horizon:27.1.1
     container_name: opennms2
     hostname: opennms2
     depends_on:
@@ -319,7 +318,7 @@ services:
       retries: 3
 
   minion2: # Connects to opennms2
-    image: opennms/minion:27.0.3
+    image: opennms/minion:27.1.1
     container_name: minion2
     hostname: minion2
     depends_on:
@@ -335,7 +334,6 @@ services:
     - 8878:8877/udp
     volumes:
     - ./config/minion/config2.yaml:/opt/minion/minion-config.yaml
-    - ./config/minion/custom2.properties:/opt/minion-etc-overlay/custom.system.properties # Because it doesn't work via minion-config.yaml
     environment:
     - TZ=America/New_York
     - OPENNMS_HTTP_USER=admin
@@ -349,7 +347,7 @@ services:
   helm:
     container_name: helm
     hostname: helm
-    image: opennms/helm:6.0.0
+    image: opennms/helm:6.0.1
     depends_on:
     - opennms1
     - opennms2
